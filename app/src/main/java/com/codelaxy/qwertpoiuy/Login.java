@@ -27,6 +27,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 
 import com.codelaxy.qwertpoiuy.Api.RetrofitClient;
@@ -57,6 +58,9 @@ public class Login extends AppCompatActivity implements View.OnClickListener {
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
+
+    @BindView(R.id.terms_checkbox)
+    CheckBox termsCheckbox;
 
     public String str_user_id, str_password;
 
@@ -107,6 +111,22 @@ public class Login extends AppCompatActivity implements View.OnClickListener {
 
             password.setError("Please Enter Password");
             password.requestFocus();
+            return;
+        }
+
+        if(! termsCheckbox.isChecked()) {
+            //termsCheckbox.setError("Please agree our terms and conditions to continue");
+            termsCheckbox.requestFocus();
+            new AlertDialog.Builder(Login.this)
+                    .setMessage("Please agree our terms and conditions to continue.")
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .create()
+                    .show();
             return;
         }
 

@@ -73,6 +73,15 @@
             android:paddingBottom="15dp"
             android:textSize="15sp" />
 
+        <CheckBox
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/terms_checkbox"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginVertical="10dp"
+            android:padding="10dp"
+            android:text="I agree the rules and regulations which i have received from TECHAIRCRAFT SOLUTION PVT. LTD. on my E-mail."/>
+
         <Button
             android:id="@+id/login"
             android:layout_width="match_parent"
