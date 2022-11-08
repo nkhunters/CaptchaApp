@@ -21,6 +21,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -114,7 +115,7 @@ public class Login extends AppCompatActivity implements View.OnClickListener {
             return;
         }
 
-        if(! termsCheckbox.isChecked()) {
+        if (!termsCheckbox.isChecked()) {
             //termsCheckbox.setError("Please agree our terms and conditions to continue");
             termsCheckbox.requestFocus();
             new AlertDialog.Builder(Login.this)
@@ -135,87 +136,68 @@ public class Login extends AppCompatActivity implements View.OnClickListener {
         dialog.setCancelable(false);
         dialog.show();
 
-        Dexter.withActivity(Login.this)
-                .withPermission(Manifest.permission.READ_PHONE_STATE)
-                .withListener(new PermissionListener() {
-                    @Override
-                    public void onPermissionGranted(PermissionGrantedResponse response) {
+        String imei = Settings.Secure.getString(getContentResolver(),
+                Settings.Secure.ANDROID_ID);
 
-                        TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-                        String imei = telephonyManager.getDeviceId();
+        Call<LoginResponse> call = RetrofitClient.getInstance().getApi().login(str_user_id, str_password, imei);
+        call.enqueue(new Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
 
-                        Call<LoginResponse> call = RetrofitClient.getInstance().getApi().login(str_user_id, str_password, imei);
-                        call.enqueue(new Callback<LoginResponse>() {
-                            @Override
-                            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                dialog.dismiss();
+                if (response.code() == 201) {
 
-                                dialog.dismiss();
-                                if (response.code() == 201) {
+                    User user = response.body().getMessage();
+                    if (user.getMessage().equalsIgnoreCase("Device Not Matched")) {
 
-                                    User user = response.body().getMessage();
-                                    if (user.getMessage().equalsIgnoreCase("Device Not Matched")) {
+                        Snackbar.make(findViewById(R.id.main_layout), "User id already registered with another device", Snackbar.LENGTH_LONG).show();
+                    } else {
 
-                                        Snackbar.make(findViewById(R.id.main_layout), "User id already registered with another device", Snackbar.LENGTH_LONG).show();
-                                    } else {
+                        String message = "Id already registered and activated.";
+                        if (getSharedPreferences("my_prefs", MODE_PRIVATE).getInt("login_msg", 0) != 1)
+                            message = "This id is registered on this device and cannot be used on any other device. If you want to use this id on another device, contact company.";
+                        new AlertDialog.Builder(Login.this)
+                                .setMessage(message)
+                                .setCancelable(false)
+                                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
 
-                                        String message = "Id already registered and activated.";
-                                        if(getSharedPreferences("my_prefs", MODE_PRIVATE).getInt("login_msg", 0) != 1)
-                                            message = "This id is registered on this device and cannot be used on any other device. If you want to use this id on another device, contact company.";
-                                        new AlertDialog.Builder(Login.this)
-                                                .setMessage(message)
-                                                .setCancelable(false)
-                                                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                                    @Override
-                                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        SharedPreferences preferences = getSharedPreferences("my_prefs", MODE_PRIVATE);
+                                        preferences.edit().putInt("login_msg", 1).apply();
 
-                                                        SharedPreferences preferences = getSharedPreferences("my_prefs", MODE_PRIVATE);
-                                                        preferences.edit().putInt("login_msg", 1).apply();
+                                        String captcha_time = user.getCaptcha_time();
+                                        String captcha_count = user.getCaptcha_count();
+                                        String captcha_rate = user.getCaptcha_rate();
+                                        String auto_approve = user.getAuto_approve();
+                                        String total_earning = user.getTotal_earning();
 
-                                                        String captcha_time = user.getCaptcha_time();
-                                                        String captcha_count = user.getCaptcha_count();
-                                                        String captcha_rate = user.getCaptcha_rate();
-                                                        String auto_approve = user.getAuto_approve();
-                                                        String total_earning = user.getTotal_earning();
-
-                                                        Intent intent = new Intent(Login.this, CaptchaActivity.class);
-                                                        intent.putExtra("user_id", str_user_id);
-                                                        intent.putExtra("captcha_time", captcha_time);
-                                                        intent.putExtra("captcha_count", captcha_count);
-                                                        intent.putExtra("captcha_rate", captcha_rate);
-                                                        intent.putExtra("auto_approve", auto_approve);
-                                                        intent.putExtra("total_earning", total_earning);
-                                                        startActivity(intent);
-                                                        finish();
-                                                    }
-                                                }).create().show();
-
+                                        Intent intent = new Intent(Login.this, CaptchaActivity.class);
+                                        intent.putExtra("user_id", str_user_id);
+                                        intent.putExtra("captcha_time", captcha_time);
+                                        intent.putExtra("captcha_count", captcha_count);
+                                        intent.putExtra("captcha_rate", captcha_rate);
+                                        intent.putExtra("auto_approve", auto_approve);
+                                        intent.putExtra("total_earning", total_earning);
+                                        startActivity(intent);
+                                        finish();
                                     }
-                                } else {
-
-                                    Snackbar.make(findViewById(R.id.main_layout), "Invalid username or password Please try again!!", Snackbar.LENGTH_LONG).show();
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(Call<LoginResponse> call, Throwable t) {
-
-                                Log.d("niraj", t.getMessage());
-                                dialog.cancel();
-                                Snackbar.make(findViewById(R.id.main_layout), "Something went wrong Please check your internet!!", Snackbar.LENGTH_LONG).show();
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onPermissionDenied(PermissionDeniedResponse response) {
+                                }).create().show();
 
                     }
+                } else {
 
-                    @Override
-                    public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
+                    Snackbar.make(findViewById(R.id.main_layout), "Invalid username or password Please try again!!", Snackbar.LENGTH_LONG).show();
+                }
+            }
 
-                    }
-                })
-                .check();
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+
+                Log.d("niraj", t.getMessage());
+                dialog.cancel();
+                Snackbar.make(findViewById(R.id.main_layout), "Something went wrong Please check your internet!!", Snackbar.LENGTH_LONG).show();
+            }
+        });
     }
 }

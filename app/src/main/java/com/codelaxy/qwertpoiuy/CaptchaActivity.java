@@ -76,7 +76,7 @@ public class CaptchaActivity extends AppCompatActivity implements View.OnClickLi
 
     //int position = 0, right_count, wrong_count, skip_count, total_earning, auto_approve;
     ArrayList<Captcha> dataList;
-    String image_url = "http://captchabro.website/CaptchaApi/includes/uploads/";
+    //String image_url = "http://captchabro.website/CaptchaApi/includes/uploads/";
     CountDownTimer timer;
     boolean timer_running = false;
     String captcha_id;
@@ -150,7 +150,7 @@ public class CaptchaActivity extends AppCompatActivity implements View.OnClickLi
                         captcha_type.setText(str_captcha_type);
 
                         Glide.with(CaptchaActivity.this)
-                                .load(image_url + str_image)
+                                .load(str_image)
                                 .diskCacheStrategy(DiskCacheStrategy.NONE)
                                 .skipMemoryCache(true)
                                 .listener(new RequestListener<Drawable>() {
@@ -260,7 +260,7 @@ public class CaptchaActivity extends AppCompatActivity implements View.OnClickLi
                         });*/
 
                         Glide.with(CaptchaActivity.this)
-                                .load(image_url + str_image)
+                                .load(str_image)
                                 .diskCacheStrategy(DiskCacheStrategy.NONE)
                                 .skipMemoryCache(true)
                                 .listener(new RequestListener<Drawable>() {
@@ -352,7 +352,7 @@ public class CaptchaActivity extends AppCompatActivity implements View.OnClickLi
                         });*/
 
                         Glide.with(CaptchaActivity.this)
-                                .load(image_url + str_image)
+                                .load(str_image)
                                 .diskCacheStrategy(DiskCacheStrategy.NONE)
                                 .skipMemoryCache(true)
                                 .listener(new RequestListener<Drawable>() {
